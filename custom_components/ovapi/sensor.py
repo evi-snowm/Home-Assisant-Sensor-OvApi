@@ -16,7 +16,7 @@ from homeassistant.util import Throttle
 
 import homeassistant.helpers.config_validation as cv
 
-__version__ = '1.4.2'
+__version__ = '1.4.4'
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = 'v0.ovapi.nl'
@@ -47,6 +47,7 @@ ATTR_STOP_NAME = 'stop_name'
 ATTR_DEPARTURE = 'departure'
 ATTR_DELAY = 'delay'
 ATTR_DEPARTURES = 'departures'
+ATTR_STATUS = 'status'
 ATTR_UPDATE_CYCLE = 'update_cycle'
 ATTR_CREDITS = 'credits'
 
@@ -108,6 +109,7 @@ class OvApiSensor(Entity):
         self._stop_name = None
         self._departure = None
         self._delay = None
+        self._status = None
         self._departures = None
         self._state = None
 
@@ -149,6 +151,10 @@ class OvApiSensor(Entity):
         return self._delay
 
     @property
+    def status(self):
+        return self._status
+
+    @property
     def departures(self):
         return self._departures
 
@@ -179,6 +185,7 @@ class OvApiSensor(Entity):
                 ATTR_DEPARTURE: self._departure,
                 ATTR_DELAY: self._delay,
                 ATTR_DEPARTURES: self._departures,
+                ATTR_STATUS: self._status,
                 ATTR_UPDATE_CYCLE: str(MIN_TIME_BETWEEN_UPDATES.seconds) + ' seconds',
                 ATTR_CREDITS: CONF_CREDITS
             }
@@ -197,6 +204,7 @@ class OvApiSensor(Entity):
                 ATTR_STOP_NAME: self._stop_name,
                 ATTR_DEPARTURE: self._departure,
                 ATTR_DELAY: self._delay,
+                ATTR_STATUS: self._status,
                 ATTR_UPDATE_CYCLE: str(MIN_TIME_BETWEEN_UPDATES.seconds) + ' seconds',
                 ATTR_CREDITS: CONF_CREDITS
             }
@@ -235,7 +243,8 @@ class OvApiSensor(Entity):
                     "TargetDepartureTime": target_departure_time.time(),
                     "TargetDepartureDateTime": target_departure_time,
                     "ExpectedArrivalTime": expected_arrival_time.time(),
-                    "Delay": delay
+                    "Delay": delay,
+                    "Status": stop['TripStopStatus']
                 }
 
                 stops_list.append(stops_item)
@@ -262,6 +271,7 @@ class OvApiSensor(Entity):
 
                 self._departure = stops_list[self._sensor_number]["TargetDepartureTime"].strftime('%H:%M')
                 self._delay = str(stops_list[self._sensor_number]["Delay"])
+                self._status = stops_list[self._sensor_number]["Status"]
 
                 if self._sensor_number == 0:
                     departure_list = []
